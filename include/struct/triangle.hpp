@@ -14,7 +14,6 @@ class triangle : public hittable {
             const ray& r, double t_min, double t_max, hit_record& rec) const override;
         virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
 
-    public:
         point3 a,b,c;
         shared_ptr<material> mat_ptr;
 };
@@ -56,16 +55,14 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
 
     // ne renvoie vrai que si l'intersection est valide (comprise entre tmin et tmax du rayon)
     if (t <= t_max && t > EPSILON){
-        if(t < rec.t){
-            rec.t = t;
-            // rec.u = u;
-            // rec.v = v;
-            rec.p = r.origin() + r.direction() * t;
-            rec.normal = cross(ab,ac);
-            rec.set_face_normal(r, rec.normal);
-            rec.mat_ptr = mat_ptr;
-            return true;
-        }
+        rec.t = t;
+        rec.u = u;
+        rec.v = v;
+        rec.p = r.origin() + r.direction() * t;
+        rec.normal = cross(ab,ac);
+        rec.set_face_normal(r, rec.normal);
+        rec.mat_ptr = mat_ptr;
+        return true;
     }
     return false;
 }

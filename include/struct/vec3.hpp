@@ -14,8 +14,10 @@ class vec3 {
         vec3(double e0, double e1, double e2) : x(e0), y(e1), z(e2) {}
 
         vec3 operator-() const { return vec3(-x, -y, -z); }
-        double operator[](int i) const { if (i==0) return x; if (i==1) return x; if (i==2) return x; std::cerr << "out of range" << std::endl;}
-        double& operator[](int i) { if (i==0) return x; if (i==1) return x; if (i==2) return x; std::cerr << "out of range" << std::endl;}
+        double operator[](int i) const 
+            { if (i==0) return x; if (i==1) return y; if (i==2) return z; std::cerr << "out of range" << std::endl; return z;}
+        double& operator[](int i) 
+            { if (i==0) return x; if (i==1) return y; if (i==2) return z; std::cerr << "out of range" << std::endl; return z;}
 
         vec3& operator+=(const vec3 &v) {
             x += v.x;
