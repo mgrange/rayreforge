@@ -12,6 +12,7 @@ class triangle : public hittable {
 
         virtual bool hit(
             const ray& r, double t_min, double t_max, hit_record& rec) const override;
+        virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
 
     public:
         point3 a,b,c;
@@ -28,17 +29,17 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
 
     /* if determinant is near zero, ray lies in plane of triangle */
     vec3 ab= b-a;
-    float det= dot(ab, pvec);
+    double det= dot(ab, pvec);
     if(det > -EPSILON && det < EPSILON)
         return false;
 
-    float inv_det= 1.0f / det;
+    double inv_det= 1.0f / det;
 
     /* calculate distance from vert0 to ray origin */
     vec3 tvec = r.origin() - a;
 
     /* calculate U parameter and test bounds */
-    float u= dot(tvec, pvec) * inv_det;
+    double u= dot(tvec, pvec) * inv_det;
     if(u < 0.0f || u > 1.0f)
         return false;
 
@@ -46,7 +47,7 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
     vec3 qvec= cross(tvec, ab);
 
     /* calculate V parameter and test bounds */
-    float v= dot(r.direction(), qvec) * inv_det;
+    double v= dot(r.direction(), qvec) * inv_det;
     if(v < 0.0f || u + v > 1.0f)
         return false;
 
@@ -57,6 +58,8 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
     if (t <= t_max && t > EPSILON){
         if(t < rec.t){
             rec.t = t;
+            // rec.u = u;
+            // rec.v = v;
             rec.p = r.origin() + r.direction() * t;
             rec.normal = cross(ab,ac);
             rec.set_face_normal(r, rec.normal);
@@ -65,6 +68,20 @@ bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) co
         }
     }
     return false;
+}
+
+bool triangle::bounding_box(double time0, double time1, aabb& output_box) const {
+    point3 minimum, maximum;
+    minimum.x = std::min(a.x,std::min(b.x,c.x));
+    minimum.y = std::min(a.y,std::min(b.y,c.y));
+    minimum.z = std::min(a.z,std::min(b.z,c.z));
+
+    maximum.x = std::max(a.x,std::max(b.x,c.x));
+    maximum.y = std::max(a.y,std::max(b.y,c.y));
+    maximum.z = std::max(a.z,std::max(b.z,c.z));
+
+    output_box = aabb(minimum, maximum);
+    return true;
 }
 
 #endif
