@@ -33,9 +33,9 @@ int main() {
 
     // Image
     double aspect_ratio = 16.0 / 9.0;
-    int image_width = 1920;
+    int image_width = 400;
     int image_height = static_cast<int>(image_width / aspect_ratio);
-    int samples_per_pixel = 100;
+    int samples_per_pixel = 10;
     int max_depth = 50;
 
     // World
@@ -44,6 +44,7 @@ int main() {
     camera cam;
 
     open_cornell(bvh, cam, aspect_ratio);
+    // open_bigguy(bvh, cam, aspect_ratio);
     // final_scene(bvh, cam, image_width, aspect_ratio);
 
     // Render
@@ -66,13 +67,6 @@ int main() {
     }
     std::cerr << "writting result" << std::endl;
 
-    // write img.ppm
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-    for (int j = image_height-1; j >= 0; --j) {
-        for (int i = 0; i < image_width; ++i) {
-            write_color(std::cout, pixel_list[offset(i,j,image_height,image_width)], samples_per_pixel);
-        }
-    }
-
-    std::cerr << "\nDone\n";
+    write_image(pixel_list, image_width, image_height, samples_per_pixel);
+    std::cerr << "Done\n";
 }
