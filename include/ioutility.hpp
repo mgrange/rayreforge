@@ -16,6 +16,27 @@
 #include "struct/triangle.hpp"
 #include "struct/bvh.hpp"
 
+void write_image(std::vector<color> & pixel_list, const int image_width, const int image_height, 
+    const int samples_per_pixel, const char * filename){
+        
+        int bytes_per_pixel = 3;
+        unsigned char * data;
+        data = new unsigned char[pixel_list.size()*bytes_per_pixel];
+
+        // for (int j = image_height-1; j >= 0; --j) {
+        //     for (int i = 0; i < image_width; ++i) {
+        //         color pixel = pixel_list[offset(i,j,image_height,image_width)];
+        //     }
+        // }
+        for(int i = 0; i < pixel_list.size(); ++i){
+            
+        }
+
+        // if(stbi_write_bmp(filename, image_width, image_height, ?, data) == 1){
+        //     std::cerr << "image generated" << std::endl;
+        // }
+}
+
 hittable_list read_obj( const char *filename)
 {
     hittable_list world;
@@ -186,7 +207,8 @@ void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
     objects.add(make_shared<triangle>(a,b,c,difflight));
     objects.add(make_shared<triangle>(a,b,d,difflight));
 
-    world.add(make_shared<bvh_node>(objects, 0, 1));
+    // world.add(make_shared<bvh_node>(objects, 0, 1));
+    world = objects;
 
     point3 lookfrom(0,2,7);
     point3 lookat(0,1,0);
@@ -201,8 +223,9 @@ void open_bigguy(hittable_list & world, camera & cam, double aspect_ratio)
 {
      // World
     color background(0,0,0);
-    hittable_list objects = read_obj("../data/bigguy.obj");
-
+    // hittable_list objects = read_obj("../data/bigguy.obj");
+    hittable_list objects;
+    
     // adding light
     auto difflight = make_shared<diffuse_light>(color(4,4,4));
     point3 a(10,10,10);
@@ -242,8 +265,8 @@ void final_scene(hittable_list & objects, camera & cam, const int image_width, c
     point3 b(443,412,554);
     point3 c(123,412,554);
     point3 d(443,127,554);
-    objects.add(make_shared<triangle>(a, b, c, light));
-    objects.add(make_shared<triangle>(a, b, d, light));
+    // objects.add(make_shared<triangle>(a, b, c, light));
+    // objects.add(make_shared<triangle>(a, b, d, light));
 
 
     auto center1 = point3(400, 400, 200);

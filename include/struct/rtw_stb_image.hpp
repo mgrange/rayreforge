@@ -9,6 +9,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../external/stb_image.hpp"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../external/stb_image_write.hpp"
 
 // Restore warning levels.
 #ifdef _MSC_VER
