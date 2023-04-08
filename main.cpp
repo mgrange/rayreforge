@@ -35,17 +35,19 @@ int main() {
     double aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
     int image_height = static_cast<int>(image_width / aspect_ratio);
-    int samples_per_pixel = 10;
+    int samples_per_pixel = 50;
     int max_depth = 50;
 
     // World
     color background(0,0,0);
-    hittable_list bvh;
+    hittable_list world;
     camera cam;
 
-    open_cornell(bvh, cam, aspect_ratio);
-    // open_bigguy(bvh, cam, aspect_ratio);
-    // final_scene(bvh, cam, image_width, aspect_ratio);
+    open_cornell(world, cam, aspect_ratio);
+    // open_sponza(world, cam, aspect_ratio);
+    // open_bigguy(world, cam, aspect_ratio);
+    // open_test(world, cam, aspect_ratio);
+    // final_scene(world, cam, image_width, aspect_ratio);
 
     // Render
     std::vector<color> pixel_list;
@@ -60,7 +62,7 @@ int main() {
                 auto u = (i + random_double()) / (image_width-1);
                 auto v = (j + random_double()) / (image_height-1);
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, background, bvh, max_depth);
+                pixel_color += ray_color(r, background, world, max_depth);
             }
             pixel_list[offset(i,j,image_height,image_width)] = pixel_color;
         }

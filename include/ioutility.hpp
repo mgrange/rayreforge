@@ -5,16 +5,38 @@
 #include <ctype.h>
 #include <climits>
 #include <memory>
+#include <map>
 
 #include <algorithm>
 
 #include "material.hpp"
+#include "camera.hpp"
 
 #include "struct/vec3.hpp"
 #include "struct/hittable_list.hpp"
 #include "struct/sphere.hpp"
 #include "struct/triangle.hpp"
 #include "struct/bvh.hpp"
+
+std::string pathname( const std::string& filename )
+{
+    std::string path= filename;
+#ifndef WIN32
+    std::replace(path.begin(), path.end(), '\\', '/');   // linux, macos : remplace les \ par /.
+    size_t slash = path.find_last_of( '/' );
+    if(slash != std::string::npos)
+        return path.substr(0, slash +1); // inclus le slash
+    else
+        return "./";
+#else
+    std::replace(path.begin(), path.end(), '/', '\\');   // windows : remplace les / par \.
+    size_t slash = path.find_last_of( '\\' );
+    if(slash != std::string::npos)
+        return path.substr(0, slash +1); // inclus le slash
+    else
+        return ".\\";
+#endif
+}
 
 void write_image(std::vector<color> & pixel_list, const int image_width, const int image_height, 
     const int samples_per_pixel){
@@ -63,6 +85,89 @@ void write_image(std::vector<color> & pixel_list, const int image_width, const i
         free(datahdr);
 }
 
+std::map<std::string,shared_ptr<material>> read_materials( const char *filename )
+{
+    std::map<std::string,shared_ptr<material>> materials;
+    std::vector<std::string> namematerial;
+    std::vector<color> colormaterial;
+    
+    FILE *in= fopen(filename, "rt");
+    if(in == NULL)
+    {
+        printf("[error] loading materials '%s'...\n", filename);
+        materials.insert(std::pair<std::string, shared_ptr<material>>("white",make_shared<lambertian>(color(0.5,0.5,0.5))));
+        return materials;
+    }
+    
+    printf("loading materials '%s'...\n", filename);
+    
+    char tmp[1024];
+    char line_buffer[1024];
+    bool error= true;
+    bool isColor = false;
+    bool isLight = false;
+    
+    for(;;)
+    {
+        // charge une ligne du fichier
+        if(fgets(line_buffer, sizeof(line_buffer), in) == NULL)
+        {
+            error= false;       // fin du fichier, pas d'erreur detectee
+            break;
+        }
+        
+        // force la fin de la ligne, au cas ou
+        line_buffer[sizeof(line_buffer) -1]= 0;
+        
+        // saute les espaces en debut de ligne
+        char *line= line_buffer;
+        while(*line && isspace(*line))
+            line++;
+        
+        if(line[0] == 'n')
+        {
+            // add new material name
+            if(sscanf(line, "newmtl %[^\r\n]", tmp) == 1)
+                namematerial.push_back(tmp);
+        }
+        
+        // if(material == NULL)
+        //     continue;
+
+        if(line[0] == 'K')
+        {
+            float r, g, b;
+            // add new color material
+            if(sscanf(line, "Kd %f %f %f", &r, &g, &b) == 3)
+                colormaterial.push_back(color(r,g,b));
+            else if(sscanf(line, "Ks %f %f %f", &r, &g, &b) == 3)
+                colormaterial.push_back(color(r,g,b));
+            else if(sscanf(line, "Ke %f %f %f", &r, &g, &b) == 3)
+                colormaterial.push_back(color(r,g,b));
+        }
+        
+        // else if(line[0] == 'N')
+        // {
+        //     float n;
+        //     if(sscanf(line, "Ns %f", &n) == 1)          // Ns, puissance / concentration du reflet, modele blinn phong
+        //         material->ns= n;
+        // }
+    }
+    for(int i = 0; i < namematerial.size(); ++i){
+        if(colormaterial[i*3+2].x != 0 || colormaterial[i*3+2].y != 0 || colormaterial[i*3+2].z != 0){
+            materials.insert(std::pair<std::string, shared_ptr<material>>(namematerial[i],make_shared<diffuse_light>(colormaterial[i*3+2])));
+        } else {
+            materials.insert(std::pair<std::string, shared_ptr<material>>(namematerial[i],make_shared<lambertian>(colormaterial[i*3])));
+        }
+    }
+    
+    fclose(in);
+    if(error)
+        printf("[error] parsing line :\n%s\n", line_buffer);
+    
+    return materials;
+}
+
 hittable_list read_obj( const char *filename)
 {
     hittable_list world;
@@ -77,10 +182,9 @@ hittable_list read_obj( const char *filename)
     std::vector<vec3> positions;
     std::vector<vec3> texcoords;
     std::vector<vec3> normals;
-    shared_ptr<material> materials;
-    int default_material_id= -1;
-    int material_id= -1;
-    
+    std::map<std::string,shared_ptr<material>> materials;
+    std::string materialName;
+
     std::vector<int> idp;
     std::vector<int> idt;
     std::vector<int> idn;
@@ -171,43 +275,25 @@ hittable_list read_obj( const char *filename)
                     if(n >= 0) normal.push_back(normals[n]);
                     abc.push_back(positions[p]);
                 }
-                auto material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
-                world.add(make_shared<triangle>(abc[0], abc[1], abc[2], material));
+                world.add(make_shared<triangle>(abc[0], abc[1], abc[2], materials[materialName]));
             }
         }
         
-        // else if(line[0] == 'm')
-        // {
-        //    if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
-        //    {
-        //        materials= read_materials( std::string(pathname(filename) + tmp).c_str() );
-        //        // enregistre les matieres dans le mesh
-        //        data.mesh_materials(materials.data);
-        //    }
-        // }
+        else if(line[0] == 'm')
+        {
+           if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
+           {
+               materials= read_materials( std::string(pathname(filename) + tmp).c_str() );
+           }
+        }
         
-        // else if(line[0] == 'u')
-        // {
-        //    if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
-        //    {
-        //        material_id= -1;
-        //        for(unsigned int i= 0; i < (unsigned int) materials.names.size(); i++)
-        //         if(materials.names[i] == tmp)
-        //             material_id= i;
-                
-        //         if(material_id == -1)
-        //         {
-        //             // force une matiere par defaut, si necessaire
-        //             if(default_material_id == -1)
-        //                 default_material_id= data.mesh_material(Material());
-                    
-        //             material_id= default_material_id;
-        //         }
-                
-        //         // selectionne une matiere pour le prochain triangle
-        //         data.material(material_id);
-        //    }
-        // }
+        else if(line[0] == 'u')
+        {
+           if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
+           {
+                materialName = tmp;
+           }
+        }
     }
     
     fclose(in);
@@ -215,6 +301,7 @@ hittable_list read_obj( const char *filename)
     if(error)
         std::cerr << "loading mesh "<< filename << "[error]" << line_buffer <<"...\n" << std::endl;
     
+    std::cerr << world.objects.size() << " element load" << std::endl;
     return world;
 }
 
@@ -226,15 +313,40 @@ void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
 
     // adding light
     auto difflight = make_shared<diffuse_light>(color(4,4,4));
-    point3 a(-0.24,1.98,0.16);
-    point3 b(-0.24,1.98,-0.22);
-    point3 c(0.23,1.98,-0.22);
-    point3 d(0.23,1.98,0.16);
-    objects.add(make_shared<triangle>(a,b,c,difflight));
+    point3 a(-0.48,1.98,0.32);
+    point3 b(-0.48,1.98,-0.44);
+    point3 c(0.46,1.98,-0.44);
+    point3 d(0.46,1.98,0.32);
+    objects.add(make_shared<triangle>(a,d,c,difflight));
     objects.add(make_shared<triangle>(a,b,d,difflight));
 
-    // world.add(make_shared<bvh_node>(objects, 0, 1));
-    world = objects;
+    world.add(make_shared<bvh_node>(objects, 0, 1));
+
+    point3 lookfrom(0,2,7);
+    point3 lookat(0,1,0);
+    vec3 vup(0,1,0);
+    auto dist_to_focus = (lookfrom-lookat).length();
+    auto aperture = 2.0;
+
+    cam = camera(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+}
+
+void open_sponza(hittable_list & world, camera & cam, double aspect_ratio)
+{
+     // Worldcornell
+    color background(0,0,0);
+    hittable_list objects = read_obj("../data/sponza.obj");
+
+    // adding light
+    auto difflight = make_shared<diffuse_light>(color(4,4,4));
+    point3 a(10,10,10);
+    point3 b(50,10,10);
+    point3 c(10,50,10);
+    point3 d(50,50,10);
+    objects.add(make_shared<triangle>(a,d,c,difflight));
+    objects.add(make_shared<triangle>(a,b,d,difflight));
+
+    world.add(make_shared<bvh_node>(objects, 0, 1));
 
     point3 lookfrom(0,2,7);
     point3 lookat(0,1,0);
@@ -250,16 +362,17 @@ void open_bigguy(hittable_list & world, camera & cam, double aspect_ratio)
      // World
     color background(0,0,0);
     hittable_list objects = read_obj("../data/bigguy.obj");
-    
+
     // adding light
     auto difflight = make_shared<diffuse_light>(color(4,4,4));
     point3 a(10,10,10);
     point3 b(20,10,10);
     point3 c(10,20,10);
     point3 d(10,10,20);
-    objects.add(make_shared<triangle>(a,b,c,difflight));
+    objects.add(make_shared<triangle>(a,d,c,difflight));
     objects.add(make_shared<triangle>(a,b,d,difflight));
 
+    //create BVH 
     world.add(make_shared<bvh_node>(objects, 0, 1));
 
     point3 lookfrom(20,5,50);
