@@ -5,6 +5,7 @@
 
 #include "../utility.hpp"
 
+#include "aabb.hpp"
 #include "hittable.hpp"
 #include "hittable_list.hpp"
 
@@ -78,7 +79,32 @@ bvh_node::bvh_node(
 ) {
     auto objects = src_objects; // Create a modifiable array of the source scene objects
 
-    int axis = random_int(0,2);
+    aabb bounds;
+    objects[start]->bounding_box(0,1, bounds);
+    // construire la boite englobante des centres des primitives d'indices [begin .. end[
+    for(int i = start + 1; i< end ; i ++){
+        /*calcule des limites de la bbox*/
+        aabb boundsbis;
+        objects[i]->bounding_box(0,1, boundsbis);
+        bounds = surrounding_box (bounds, boundsbis);
+    }
+    // std::cout << "with bbox = (" << bounds.min().x << "," << bounds.min().y << "," << bounds.min().z << ")" <<
+    //         " et (" << bounds.max().x << "," << bounds.max().y << "," << bounds.max().z << ")" << std::endl;
+    // select split for bbox
+    int axe = 0;
+
+    if(((bounds.max().y - bounds.min().y) > (bounds.max().x - bounds.min().x))
+        && ((bounds.max().y - bounds.min().y) > (bounds.max().z - bounds.min().z))){
+      axe = 1;
+    }else if(((bounds.max().z - bounds.min().z) > (bounds.max().x - bounds.min().x))
+            && ((bounds.max().z - bounds.min().z) > (bounds.max().y - bounds.min().y))){
+      axe = 2;
+    }
+    int axis = axe;
+
+    // Random split for bbox
+    // int axis = random_int(0,2);
+    
     auto comparator = (axis == 0) ? box_x_compare
                     : (axis == 1) ? box_y_compare
                                   : box_z_compare;
@@ -97,8 +123,8 @@ bvh_node::bvh_node(
         }
     } else {
         std::sort(objects.begin() + start, objects.begin() + end, comparator);
-
-        auto mid = start + object_span/2;
+    
+        auto mid = (start + end)/2;
         left = make_shared<bvh_node>(objects, start, mid, time0, time1);
         right = make_shared<bvh_node>(objects, mid, end, time0, time1);
     }
@@ -110,7 +136,7 @@ bvh_node::bvh_node(
     )
         std::cerr << "No bounding box in bvh_node constructor.\n";
 
-    box = surrounding_box(box_left, box_right);
+    box = bounds;
 }
 
 #endif

@@ -47,28 +47,28 @@ void write_image(std::vector<color> & pixel_list, const int image_width, const i
         data = new unsigned char[pixel_list.size()*bytes_per_pixel];
         datahdr = new float[pixel_list.size()*bytes_per_pixel];
 
-        int j = 0;
-        for(int i = pixel_list.size()-1; i >= 0; --i){
-            double r = pixel_list[i].x;
-            double g = pixel_list[i].y;
-            double b = pixel_list[i].z;
+        for (int j = image_height-1; j >= 0; --j) {
+            for (int i = image_width-1; i >= 0; --i) {
+                double r = pixel_list[offset(i,j,image_height,image_width)].x;
+                double g = pixel_list[offset(i,j,image_height,image_width)].y;
+                double b = pixel_list[offset(i,j,image_height,image_width)].z;
 
-            // Divide the color by the number of samples and gamma-correct for gamma=2.0.
-            double scale = 1.0 / samples_per_pixel;
-            r = sqrt(scale * r);
-            g = sqrt(scale * g);
-            b = sqrt(scale * b);
+                // Divide the color by the number of samples and gamma-correct for gamma=2.0.
+                double scale = 1.0 / samples_per_pixel;
+                r = sqrt(scale * r);
+                g = sqrt(scale * g);
+                b = sqrt(scale * b);
+                
+                // Write the translated [0,255] value of each color component.
+                data[(i + (image_height-j-1) * image_width)*3] = static_cast<unsigned char>(256 * clamp(r, 0.0, 0.999));
+                data[(i + (image_height-j-1) * image_width)*3+1] = static_cast<unsigned char>(256 * clamp(g, 0.0, 0.999));
+                data[(i + (image_height-j-1) * image_width)*3+2] = static_cast<unsigned char>(256 * clamp(b, 0.0, 0.999));
 
-            // Write the translated [0,255] value of each color component.
-            data[j*3] = static_cast<unsigned char>(256 * clamp(r, 0.0, 0.999));
-            data[j*3+1] = static_cast<unsigned char>(256 * clamp(g, 0.0, 0.999));
-            data[j*3+2] = static_cast<unsigned char>(256 * clamp(b, 0.0, 0.999));
-
-            // Write the translated [0,255] value of each color component.
-            datahdr[j*3] = float(r);
-            datahdr[j*3+1] = float(g);
-            datahdr[j*3+2] = float(b);
-            j++;
+                // Write the translated [0,255] value of each color component.
+                datahdr[(i + (image_height-j-1) * image_width)*3] = float(r);
+                datahdr[(i + (image_height-j-1) * image_width)*3+1] = float(g);
+                datahdr[(i + (image_height-j-1) * image_width)*3+2] = float(b);
+            }
         }
 
         if(stbi_write_png("result.png", image_width, image_height, bytes_per_pixel, data, 0) == 1){
@@ -105,7 +105,7 @@ std::map<std::string,shared_ptr<material>> read_materials( const char *filename 
     char line_buffer[1024];
     bool error= true;
     bool isColor = false;
-    bool isLight = false;
+    bool isMaterialLight = false;
     
     for(;;)
     {
@@ -311,16 +311,15 @@ void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
     color background(0,0,0);
     hittable_list objects = read_obj("../data/cornell.obj");
 
-    // adding light
-    auto difflight = make_shared<diffuse_light>(color(4,4,4));
-    point3 a(-0.48,1.98,0.32);
-    point3 b(-0.48,1.98,-0.44);
-    point3 c(0.46,1.98,-0.44);
-    point3 d(0.46,1.98,0.32);
-    objects.add(make_shared<triangle>(a,d,c,difflight));
-    objects.add(make_shared<triangle>(a,b,d,difflight));
-
+    // world = objects;
     world.add(make_shared<bvh_node>(objects, 0, 1));
+
+    //add light outside the bvh
+    for (int i = 0; i < objects.objects.size(); ++i){
+        if(objects.objects[i]->have_material_light()){
+            world.add(objects.objects[i]);
+        }
+    }
 
     point3 lookfrom(0,2,7);
     point3 lookat(0,1,0);

@@ -14,6 +14,9 @@ class material {
         virtual color emitted(double u, double v, const point3& p) const {
             return color(0,0,0);
         }
+        virtual bool isMaterialLight() const {
+            return false;
+        }
 };
 
 class lambertian : public material {
@@ -108,6 +111,10 @@ class diffuse_light : public material  {
 
         virtual color emitted(double u, double v, const point3& p) const override {
             return emit->value(u, v, p);
+        }
+
+        virtual bool isMaterialLight() const override{
+            return true;
         }
 
     public:

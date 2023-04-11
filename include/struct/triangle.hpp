@@ -14,6 +14,8 @@ class triangle : public hittable {
             const ray& r, double t_min, double t_max, hit_record& rec) const override;
         virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
 
+        virtual bool have_material_light() const override {return mat_ptr->isMaterialLight();}
+
         point3 a,b,c;
         shared_ptr<material> mat_ptr;
 };
