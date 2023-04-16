@@ -321,13 +321,13 @@ void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
         }
     }
 
-    point3 lookfrom(0,2,7);
+    point3 lookfrom(0,1,3.5);
     point3 lookat(0,1,0);
     vec3 vup(0,1,0);
     auto dist_to_focus = (lookfrom-lookat).length();
     auto aperture = 2.0;
 
-    cam = camera(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+    cam = camera(lookfrom, lookat, vup, 45, aspect_ratio, aperture, dist_to_focus);
 }
 
 void open_sponza(hittable_list & world, camera & cam, double aspect_ratio)
@@ -381,6 +381,71 @@ void open_bigguy(hittable_list & world, camera & cam, double aspect_ratio)
     auto aperture = 2.0;
 
     cam = camera(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+}
+
+void open_test(hittable_list & world, camera & cam, double aspect_ratio)
+{
+     // World
+    color background(0,0,0);
+    hittable_list objects = read_obj("../data/test.obj");
+
+    //add light outside the bvh
+    for (int i = 0; i < objects.objects.size(); ++i){
+        if(objects.objects[i]->have_material_light()){
+            world.add(objects.objects[i]);
+        }
+    }
+
+    //create BVH 
+    world.add(make_shared<bvh_node>(objects, 0, 1));
+
+    point3 lookfrom(0,5,10);
+    point3 lookat(0,5,0);
+    vec3 vup(0,1,0);
+    auto dist_to_focus = (lookfrom-lookat).length();
+    auto aperture = 2.0;
+
+    cam = camera(lookfrom, lookat, vup, 45, aspect_ratio, aperture, dist_to_focus);
+}
+
+void open_sportCar(hittable_list & world, camera & cam, double aspect_ratio)
+{
+     // World
+    color background(0.8,0.8,0.8);
+    hittable_list objects = read_obj("../data/sportsCar.obj");
+
+    //add light outside the bvh
+    for (int i = 0; i < objects.objects.size(); ++i){
+        if(objects.objects[i]->have_material_light()){
+            world.add(objects.objects[i]);
+        }
+    }
+
+    auto difflight = make_shared<diffuse_light>(color(4,4,4));
+    point3 a(-10,2,-10);
+    point3 b(-10,2,10);
+    point3 c(10,2,-10);
+    point3 d(10,2,10);
+    world.add(make_shared<triangle>(a,d,c,difflight));
+    world.add(make_shared<triangle>(a,b,d,difflight));
+
+    auto wall = make_shared<solid_color>(color(0.8,0.8,0.8));
+    c = color(-10,0,-10);
+    c = color(-10,0,10);
+
+    objects.add(make_shared<triangle>(a,d,c,wall));
+    objects.add(make_shared<triangle>(a,b,d,wall));
+
+    //create BVH 
+    world.add(make_shared<bvh_node>(objects, 0, 1));
+
+    point3 lookfrom(50,1.8,50);
+    point3 lookat(5,0.5,5);
+    vec3 vup(0,1,0);
+    auto dist_to_focus = (lookfrom-lookat).length();
+    auto aperture = 2.0;
+
+    cam = camera(lookfrom, lookat, vup, 45, aspect_ratio, aperture, dist_to_focus);
 }
 
 void final_scene(hittable_list & objects, camera & cam, const int image_width, const double aspect_ratio) {

@@ -35,7 +35,7 @@ int main() {
     double aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
     int image_height = static_cast<int>(image_width / aspect_ratio);
-    int samples_per_pixel = 100;
+    int samples_per_pixel = 10;
     int max_depth = 50;
 
     // World
@@ -43,7 +43,9 @@ int main() {
     hittable_list world;
     camera cam;
 
-    open_cornell(world, cam, aspect_ratio);
+    // open_test(world, cam, aspect_ratio);
+    // open_cornell(world, cam, aspect_ratio);
+    open_sportCar(world, cam, aspect_ratio);
     // open_sponza(world, cam, aspect_ratio);
     // open_bigguy(world, cam, aspect_ratio);
     // final_scene(world, cam, image_width, aspect_ratio);
@@ -66,6 +68,8 @@ int main() {
             pixel_list[offset(i,j,image_height,image_width)] = pixel_color;
         }
     }
+    std::cerr << std::endl;
+    // write image in format png, bmp and hdr
     write_image(pixel_list, image_width, image_height, samples_per_pixel);
     std::cerr << "Done\n";
 }
