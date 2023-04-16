@@ -313,6 +313,7 @@ void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
 
     // world = objects;
     world.add(make_shared<bvh_node>(objects, 0, 1));
+    std::cerr << std::endl;
 
     //add light outside the bvh
     for (int i = 0; i < objects.objects.size(); ++i){
@@ -333,27 +334,24 @@ void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
 void open_sponza(hittable_list & world, camera & cam, double aspect_ratio)
 {
      // Worldcornell
-    color background(0,0,0);
+    color background(0.1,0.1,0.7);
     hittable_list objects = read_obj("../data/sponza.obj");
 
     // adding light
     auto difflight = make_shared<diffuse_light>(color(4,4,4));
-    point3 a(10,10,10);
-    point3 b(50,10,10);
-    point3 c(10,50,10);
-    point3 d(50,50,10);
-    objects.add(make_shared<triangle>(a,d,c,difflight));
-    objects.add(make_shared<triangle>(a,b,d,difflight));
+    point3 a(0,0,30);
+    world.add(make_shared<sphere>(a,5,difflight));
 
     world.add(make_shared<bvh_node>(objects, 0, 1));
+    std::cerr << std::endl;
 
-    point3 lookfrom(0,2,7);
-    point3 lookat(0,1,0);
+    point3 lookfrom(1,0,5);
+    point3 lookat(0,0,5);
     vec3 vup(0,1,0);
     auto dist_to_focus = (lookfrom-lookat).length();
     auto aperture = 2.0;
 
-    cam = camera(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+    cam = camera(lookfrom, lookat, vup, 45, aspect_ratio, aperture, dist_to_focus);
 }
 
 void open_bigguy(hittable_list & world, camera & cam, double aspect_ratio)
@@ -373,6 +371,7 @@ void open_bigguy(hittable_list & world, camera & cam, double aspect_ratio)
 
     //create BVH 
     world.add(make_shared<bvh_node>(objects, 0, 1));
+    std::cerr << std::endl;
 
     point3 lookfrom(20,5,50);
     point3 lookat(0,3,0);
@@ -429,9 +428,9 @@ void open_sportCar(hittable_list & world, camera & cam, double aspect_ratio)
     world.add(make_shared<triangle>(a,d,c,difflight));
     world.add(make_shared<triangle>(a,b,d,difflight));
 
-    auto wall = make_shared<solid_color>(color(0.8,0.8,0.8));
+    auto wall = make_shared<lambertian>(color(0.8,0.8,0.8));
     c = color(-10,0,-10);
-    c = color(-10,0,10);
+    d = color(-10,0,10);
 
     objects.add(make_shared<triangle>(a,d,c,wall));
     objects.add(make_shared<triangle>(a,b,d,wall));

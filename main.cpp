@@ -35,8 +35,8 @@ int main() {
     double aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
     int image_height = static_cast<int>(image_width / aspect_ratio);
-    int samples_per_pixel = 10;
-    int max_depth = 50;
+    int samples_per_pixel = 1000;
+    int max_depth = 5;
 
     // World
     color background(0,0,0);
@@ -44,8 +44,8 @@ int main() {
     camera cam;
 
     // open_test(world, cam, aspect_ratio);
-    // open_cornell(world, cam, aspect_ratio);
-    open_sportCar(world, cam, aspect_ratio);
+    open_cornell(world, cam, aspect_ratio);
+    // open_sportCar(world, cam, aspect_ratio);
     // open_sponza(world, cam, aspect_ratio);
     // open_bigguy(world, cam, aspect_ratio);
     // final_scene(world, cam, image_width, aspect_ratio);
