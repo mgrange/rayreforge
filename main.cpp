@@ -58,22 +58,24 @@ color indirect_ray_color(ray& r, color& background, hittable& world, int depth, 
 
 int main() {
 
+    std::cerr << "attention y et z inversé par rapport à blender" << std::endl;
     // Image
     double aspect_ratio = 16.0 / 9.0;
     int image_width = 800;
     int image_height = static_cast<int>(image_width / aspect_ratio);
-    int samples_per_pixel = 100;
+    int samples_per_pixel = 10;
     int max_depth = 10;
 
     // World
-    color background(0,0,0);
+    color background(0,0,0.8);
     hittable_list world;
     camera cam;
 
     // open_test(world, cam, aspect_ratio);
-    open_cornell(world, cam, aspect_ratio);
+    // open_cornell(world, cam, aspect_ratio);
     // open_sportCar(world, cam, aspect_ratio);
-    // open_sponza(world, cam, aspect_ratio);
+    open_sponza(world, cam, aspect_ratio);
+    // open_spaceship(world, cam, aspect_ratio);
     // open_bigguy(world, cam, aspect_ratio);
     // final_scene(world, cam, image_width, aspect_ratio);
 

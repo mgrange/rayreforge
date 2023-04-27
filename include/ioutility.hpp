@@ -315,9 +315,6 @@ void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
     world.add(make_shared<bvh_node>(objects, 0, 1));
     std::cerr << std::endl;
 
-    // auto emat = make_shared<lambertian>(make_shared<image_texture>("../data/earthmap.jpg"));
-    // world.add(make_shared<triangle>(point3(-0.9,0,-0.9),point3(0.9,0,-0.9),point3(0.9,1.9,-0.9), emat));
-
     //add light outside the bvh
     for (int i = 0; i < objects.objects.size(); ++i){
         if(objects.objects[i]->have_material_light()){
@@ -347,11 +344,50 @@ void open_sponza(hittable_list & world, camera & cam, double aspect_ratio)
         }
     }
 
+    auto difflight = make_shared<diffuse_light>(color(4,4,4));
+    world.add(make_shared<sphere>(point3(0, 25, 0), 5, difflight));
+
     world.add(make_shared<bvh_node>(objects, 0, 1));
     std::cerr << std::endl;
 
-    point3 lookfrom(5,0,7);
-    point3 lookat(0,0,5);
+    point3 lookfrom(15,2,0);
+    point3 lookat(0,2,0);
+    vec3 vup(0,1,0);
+    auto dist_to_focus = (lookfrom-lookat).length();
+    auto aperture = 2.0;
+
+    cam = camera(lookfrom, lookat, vup, 45, aspect_ratio, aperture, dist_to_focus);
+}
+
+void open_spaceship(hittable_list & world, camera & cam, double aspect_ratio)
+{
+     // Worldcornell
+    color background(0,0,0);
+    // hittable_list objects = read_obj("../data/starcruiser_military/Starcruiser_military.obj");
+    hittable_list objects = read_obj("../data/ufo_plane_free.obj");
+
+    //add light outside the bvh
+    for (int i = 0; i < objects.objects.size(); ++i){
+        if(objects.objects[i]->have_material_light()){
+            world.add(objects.objects[i]);
+        }
+    }
+
+    // add earth
+    auto emat = make_shared<lambertian>(make_shared<image_texture>("../data/earthmap.jpg"));
+    objects.add(make_shared<sphere>(point3(-100, -45, -61), 100, emat));
+
+    // make BVH
+    world.add(make_shared<bvh_node>(objects, 0, 1));
+
+    // add light
+    auto difflight = make_shared<diffuse_light>(color(4,7,7));
+    world.add(make_shared<sphere>(point3(71, 11, 227), 50, difflight));
+
+    std::cerr << std::endl;
+
+    point3 lookfrom(71,11,-227);
+    point3 lookat(0,0,0);
     vec3 vup(0,1,0);
     auto dist_to_focus = (lookfrom-lookat).length();
     auto aperture = 2.0;
