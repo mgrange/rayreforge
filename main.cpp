@@ -29,14 +29,41 @@ color ray_color(ray& r, color& background, hittable& world, int depth) {
     return emitted + attenuation * ray_color(scattered, background, world, depth-1);
 }
 
+color indirect_ray_color(ray& r, color& background, hittable& world, int depth, const int & sample) {
+    hit_record rec;
+
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return color(0,0,0);
+
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, 0.001, infinity, rec))
+        return background;
+
+    ray scattered;
+    color attenuation;
+    color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+
+    if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+        return emitted;
+
+    vec3 b1, b2;
+    branchlessONB(scattered.dir, b1, b2);
+    vec3 w = l2w(fibo(sample, 32), scattered.dir, b1, b2);
+
+    ray fiboray(scattered.orig, w);
+
+    return emitted + attenuation * ray_color(fiboray, background, world, depth-1);
+}
+
 int main() {
 
     // Image
     double aspect_ratio = 16.0 / 9.0;
-    int image_width = 400;
+    int image_width = 800;
     int image_height = static_cast<int>(image_width / aspect_ratio);
-    int samples_per_pixel = 1000;
-    int max_depth = 5;
+    int samples_per_pixel = 100;
+    int max_depth = 10;
 
     // World
     color background(0,0,0);
@@ -63,13 +90,13 @@ int main() {
                 auto u = (i + random_double()) / (image_width-1);
                 auto v = (j + random_double()) / (image_height-1);
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, background, world, max_depth);
+                pixel_color += ray_color(r, background, world, max_depth) + indirect_ray_color(r, background, world, max_depth, s);
             }
             pixel_list[offset(i,j,image_height,image_width)] = pixel_color;
         }
     }
     std::cerr << std::endl;
     // write image in format png, bmp and hdr
-    write_image(pixel_list, image_width, image_height, samples_per_pixel);
+    write_image(pixel_list, image_width, image_height, samples_per_pixel*2);
     std::cerr << "Done\n";
 }

@@ -315,6 +315,9 @@ void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
     world.add(make_shared<bvh_node>(objects, 0, 1));
     std::cerr << std::endl;
 
+    // auto emat = make_shared<lambertian>(make_shared<image_texture>("../data/earthmap.jpg"));
+    // world.add(make_shared<triangle>(point3(-0.9,0,-0.9),point3(0.9,0,-0.9),point3(0.9,1.9,-0.9), emat));
+
     //add light outside the bvh
     for (int i = 0; i < objects.objects.size(); ++i){
         if(objects.objects[i]->have_material_light()){
@@ -337,15 +340,17 @@ void open_sponza(hittable_list & world, camera & cam, double aspect_ratio)
     color background(0.1,0.1,0.7);
     hittable_list objects = read_obj("../data/sponza.obj");
 
-    // adding light
-    auto difflight = make_shared<diffuse_light>(color(4,4,4));
-    point3 a(0,0,30);
-    world.add(make_shared<sphere>(a,5,difflight));
+    //add light outside the bvh
+    for (int i = 0; i < objects.objects.size(); ++i){
+        if(objects.objects[i]->have_material_light()){
+            world.add(objects.objects[i]);
+        }
+    }
 
     world.add(make_shared<bvh_node>(objects, 0, 1));
     std::cerr << std::endl;
 
-    point3 lookfrom(1,0,5);
+    point3 lookfrom(5,0,7);
     point3 lookat(0,0,5);
     vec3 vup(0,1,0);
     auto dist_to_focus = (lookfrom-lookat).length();
