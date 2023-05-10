@@ -10,6 +10,7 @@ class triangle : public hittable {
         triangle(point3 _a, point3 _b, point3 _c, shared_ptr<material> m)
             : a(_a), b(_b), c(_c), mat_ptr(m) {};
 
+        virtual point3 point( const float u, const float v ) const override;
         virtual bool hit(
             const ray& r, double t_min, double t_max, hit_record& rec) const override;
         virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
@@ -19,6 +20,13 @@ class triangle : public hittable {
         point3 a,b,c;
         shared_ptr<material> mat_ptr;
 };
+
+// return a random point between a, b and c
+point3 triangle::point( const float u, const float v ) const
+{
+    float w= 1.f - u - v;
+    return point3(a * w + b * u + c * v);
+}
 
 bool triangle::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
 

@@ -305,22 +305,11 @@ hittable_list read_obj( const char *filename)
     return world;
 }
 
-void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
+void open_cornell(hittable_list & mesh, camera & cam, double aspect_ratio)
 {
      // World
     color background(0,0,0);
-    hittable_list objects = read_obj("../data/cornell.obj");
-
-    // world = objects;
-    world.add(make_shared<bvh_node>(objects, 0, 1));
-    std::cerr << std::endl;
-
-    //add light outside the bvh
-    for (int i = 0; i < objects.objects.size(); ++i){
-        if(objects.objects[i]->have_material_light()){
-            world.add(objects.objects[i]);
-        }
-    }
+    mesh = read_obj("../data/cornell.obj");
 
     point3 lookfrom(0,1,3.5);
     point3 lookat(0,1,0);
@@ -333,8 +322,7 @@ void open_cornell(hittable_list & world, camera & cam, double aspect_ratio)
 
 void open_sponza(hittable_list & world, camera & cam, double aspect_ratio)
 {
-     // Worldcornell
-    color background(0.1,0.1,0.7);
+    color background(0.1,0.1,0.1);
     hittable_list objects = read_obj("../data/sponza.obj");
 
     //add light outside the bvh
@@ -363,28 +351,26 @@ void open_spaceship(hittable_list & world, camera & cam, double aspect_ratio)
 {
      // Worldcornell
     color background(0,0,0);
+    // hittable_list objects;
     // hittable_list objects = read_obj("../data/starcruiser_military/Starcruiser_military.obj");
-    hittable_list objects = read_obj("../data/ufo_plane_free.obj");
-
-    //add light outside the bvh
-    for (int i = 0; i < objects.objects.size(); ++i){
-        if(objects.objects[i]->have_material_light()){
-            world.add(objects.objects[i]);
-        }
-    }
+    world = read_obj("../data/ufo_plane_free.obj");
 
     // add earth
     auto emat = make_shared<lambertian>(make_shared<image_texture>("../data/earthmap.jpg"));
-    objects.add(make_shared<sphere>(point3(-100, -45, -61), 100, emat));
-
-    // make BVH
-    world.add(make_shared<bvh_node>(objects, 0, 1));
+    world.add(make_shared<sphere>(point3(-100, -45, -61), 100, emat));
 
     // add light
     auto difflight = make_shared<diffuse_light>(color(4,7,7));
     world.add(make_shared<sphere>(point3(71, 11, 227), 50, difflight));
 
-    std::cerr << std::endl;
+    // add mini light (star)
+    int ns = 500;
+    for (int j = 0; j < ns; j++) {
+        point3 alea(point3::random(-500,500));
+        alea.z = 300;
+        auto random_color = make_shared<lambertian>(color(random_double(0,1),random_double(0,1),random_double(0,1)));
+        world.add(make_shared<sphere>(alea, random_double(0.1,2), random_color));
+    }
 
     point3 lookfrom(71,11,-227);
     point3 lookat(0,0,0);
@@ -436,16 +422,25 @@ void open_test(hittable_list & world, camera & cam, double aspect_ratio)
         }
     }
 
+    // adding light
+    auto mirroir = make_shared<metal>(color(1,1,1),1);
+    point3 a(-20,20,-20);
+    point3 b(-20,-10,-20);
+    point3 c(-10,20,20);
+    point3 d(-10,-10,20);
+    objects.add(make_shared<triangle>(a,d,c,mirroir));
+    objects.add(make_shared<triangle>(a,b,d,mirroir));
+
     //create BVH 
     world.add(make_shared<bvh_node>(objects, 0, 1));
 
-    point3 lookfrom(0,5,10);
+    point3 lookfrom(13,13,23);
     point3 lookat(0,5,0);
     vec3 vup(0,1,0);
     auto dist_to_focus = (lookfrom-lookat).length();
     auto aperture = 2.0;
 
-    cam = camera(lookfrom, lookat, vup, 45, aspect_ratio, aperture, dist_to_focus);
+    cam = camera(lookfrom, lookat, vup, 70, aspect_ratio, aperture, dist_to_focus);
 }
 
 void open_sportCar(hittable_list & world, camera & cam, double aspect_ratio)

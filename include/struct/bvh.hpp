@@ -21,6 +21,8 @@ class bvh_node : public hittable {
             const std::vector<shared_ptr<hittable>>& src_objects,
             size_t start, size_t end, double time0, double time1);
 
+        virtual point3 point( const float u, const float v ) const override;
+
         virtual bool hit(
             const ray& r, double t_min, double t_max, hit_record& rec) const override;
 
@@ -31,6 +33,11 @@ class bvh_node : public hittable {
         shared_ptr<hittable> right;
         aabb box;
 };
+
+point3 bvh_node::point( const float u, const float v ) const
+{
+    return point3(0,0,0);
+}
 
 bool bvh_node::bounding_box(double time0, double time1, aabb& output_box) const {
     output_box = box;

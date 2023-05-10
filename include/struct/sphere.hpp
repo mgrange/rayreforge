@@ -10,9 +10,11 @@ class sphere : public hittable {
         sphere(point3 cen, double r, shared_ptr<material> m)
             : center(cen), radius(r), mat_ptr(m) {};
 
+        virtual point3 point( const float u, const float v ) const override;
         virtual bool hit(
             const ray& r, double t_min, double t_max, hit_record& rec) const override;
         virtual bool bounding_box(double time0, double time1, aabb& output_box) const override;
+        virtual bool have_material_light() const override {return mat_ptr->isMaterialLight();}
 
         point3 center;
         double radius;
@@ -33,6 +35,12 @@ class sphere : public hittable {
             v = theta / pi;
         }
 };
+
+// get a random point on the sphere
+point3 sphere::point( const float u, const float v ) const
+{
+    return center + radius * random_unit_vector();
+}
 
 bool sphere::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
     vec3 oc = r.origin() - center;
