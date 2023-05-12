@@ -17,6 +17,9 @@ class material {
         virtual bool isMaterialLight() const {
             return false;
         }
+        virtual bool isMatMaterial() const {
+            return true;
+        }
 };
 
 class lambertian : public material {
@@ -55,6 +58,10 @@ class metal : public material {
             return (dot(scattered.direction(), rec.normal) > 0);
         }
 
+        virtual bool isMatMaterial() const override{
+            return fuzz == 0;
+        }
+
     public:
         color albedo;
         double fuzz;
@@ -86,6 +93,10 @@ class dielectric : public material {
             return true;
         }
 
+        virtual bool isMatMaterial() const override{
+            return false;
+        }
+
     public:
         double ir; // Index of Refraction
 
@@ -115,6 +126,10 @@ class diffuse_light : public material  {
 
         virtual bool isMaterialLight() const override{
             return true;
+        }
+
+        virtual bool isMatMaterial() const override{
+            return isMaterialLight();
         }
 
     public:

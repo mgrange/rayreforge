@@ -262,6 +262,7 @@ hittable_list read_obj( const char *filename)
             {
                 std::vector<point3> abc;
                 std::vector<vec3> normal;
+                std::vector<vec3> textcoord;
                 int idv[3]= { 0, v -1, v };
                 for(int i= 0; i < 3; i++)
                 {
@@ -271,7 +272,7 @@ hittable_list read_obj( const char *filename)
                     int n= (idn[k] < 0) ? (int) normals.size()   + idn[k] : idn[k] -1;
                     
                     if(p < 0) break; // error
-                    // if(t >= 0) data.texcoord(texcoords[t]);
+                    if(t >= 0) textcoord.push_back(texcoords[t]);
                     if(n >= 0) normal.push_back(normals[n]);
                     abc.push_back(positions[p]);
                 }
@@ -323,7 +324,7 @@ void open_cornell(hittable_list & mesh, camera & cam, double aspect_ratio)
 void open_sponza(hittable_list & world, camera & cam, double aspect_ratio)
 {
     color background(0.1,0.1,0.1);
-    hittable_list objects = read_obj("../data/sponza.obj");
+    hittable_list objects = read_obj("../data/sponza/sponza.obj");
 
     //add light outside the bvh
     for (int i = 0; i < objects.objects.size(); ++i){
@@ -349,26 +350,24 @@ void open_sponza(hittable_list & world, camera & cam, double aspect_ratio)
 
 void open_spaceship(hittable_list & world, camera & cam, double aspect_ratio)
 {
-     // Worldcornell
     color background(0,0,0);
-    // hittable_list objects;
-    // hittable_list objects = read_obj("../data/starcruiser_military/Starcruiser_military.obj");
-    world = read_obj("../data/ufo_plane_free.obj");
+    // world = read_obj("../data/ufo_plane_free.obj");
 
     // add earth
     auto emat = make_shared<lambertian>(make_shared<image_texture>("../data/earthmap.jpg"));
     world.add(make_shared<sphere>(point3(-100, -45, -61), 100, emat));
 
     // add light
-    auto difflight = make_shared<diffuse_light>(color(4,7,7));
+    auto difflight = make_shared<diffuse_light>(make_shared<image_texture>("../data/soleil.jpg"));
     world.add(make_shared<sphere>(point3(71, 11, 227), 50, difflight));
 
     // add mini light (star)
+    auto random_color = make_shared<lambertian>(make_shared<image_texture>("../data/makemake.jpg"));
     int ns = 500;
     for (int j = 0; j < ns; j++) {
         point3 alea(point3::random(-500,500));
         alea.z = 300;
-        auto random_color = make_shared<lambertian>(color(random_double(0,1),random_double(0,1),random_double(0,1)));
+        // auto random_color = make_shared<lambertian>(color(random_double(0,1),random_double(0,1),random_double(0,1)));
         world.add(make_shared<sphere>(alea, random_double(0.1,2), random_color));
     }
 
@@ -413,34 +412,24 @@ void open_test(hittable_list & world, camera & cam, double aspect_ratio)
 {
      // World
     color background(0,0,0);
-    hittable_list objects = read_obj("../data/test.obj");
+    world = read_obj("../data/room.obj");
 
-    //add light outside the bvh
-    for (int i = 0; i < objects.objects.size(); ++i){
-        if(objects.objects[i]->have_material_light()){
-            world.add(objects.objects[i]);
-        }
-    }
+    // // adding light
+    // auto mirroir = make_shared<metal>(color(0.8,0.8,0.8),0.6);
+    // point3 a(-9.99,-7,2);
+    // point3 b(-9.99,-3,2);
+    // point3 c(-9.99,-7,7);
+    // point3 d(-9.99,-3,7);
+    // world.add(make_shared<triangle>(a,b,c,mirroir));
+    // world.add(make_shared<triangle>(a,b,d,mirroir));
 
-    // adding light
-    auto mirroir = make_shared<metal>(color(1,1,1),1);
-    point3 a(-20,20,-20);
-    point3 b(-20,-10,-20);
-    point3 c(-10,20,20);
-    point3 d(-10,-10,20);
-    objects.add(make_shared<triangle>(a,d,c,mirroir));
-    objects.add(make_shared<triangle>(a,b,d,mirroir));
-
-    //create BVH 
-    world.add(make_shared<bvh_node>(objects, 0, 1));
-
-    point3 lookfrom(13,13,23);
+    point3 lookfrom(7,5,-7);
     point3 lookat(0,5,0);
     vec3 vup(0,1,0);
     auto dist_to_focus = (lookfrom-lookat).length();
     auto aperture = 2.0;
 
-    cam = camera(lookfrom, lookat, vup, 70, aspect_ratio, aperture, dist_to_focus);
+    cam = camera(lookfrom, lookat, vup, 45, aspect_ratio, aperture, dist_to_focus);
 }
 
 void open_sportCar(hittable_list & world, camera & cam, double aspect_ratio)

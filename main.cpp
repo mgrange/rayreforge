@@ -86,10 +86,14 @@ color direct_ray_color(ray& r, color& background, hittable& world, std::vector<s
         ray scatter;
         if (!rec.mat_ptr->scatter(r, rec, attenuation, scatter))
             return emitted;
-        return attenuation;
+        // if material is pure color return attenuation
+        if(rec.mat_ptr->isMatMaterial())
+            return attenuation;
+        else
+            return indirect_ray_color(r, background, world, depth, sample, all_samples);
     }
-    else
-        return background;
+
+    return background;
 }
 
 int main( int argc, char **argv ) {
@@ -118,7 +122,7 @@ int main( int argc, char **argv ) {
     double aspect_ratio = 16.0 / 9.0;
     int image_width = 800;
     int image_height = static_cast<int>(image_width / aspect_ratio);
-    int samples_per_pixel = 100;
+    int samples_per_pixel = 1000;
     int max_depth = 50;
 
     // World
@@ -128,17 +132,20 @@ int main( int argc, char **argv ) {
     std::vector<shared_ptr <hittable> > light;
     camera cam;
 
-    // open_test(mesh, cam, aspect_ratio);
+    open_test(mesh, cam, aspect_ratio);
     // open_cornell(mesh, cam, aspect_ratio);
     // open_sportCar(mesh, cam, aspect_ratio);
     // open_sponza(mesh, cam, aspect_ratio);
-    open_spaceship(mesh, cam, aspect_ratio);
+    // open_spaceship(mesh, cam, aspect_ratio);
     // open_bigguy(mesh, cam, aspect_ratio);
     // final_scene(mesh, cam, image_width, aspect_ratio);
 
     // create BVH
     world.add(make_shared<bvh_node>(mesh, 0, 1));
     std::cerr << std::endl;
+
+    world.add(make_shared<sphere>(point3(0,3.5,0),1,make_shared<dielectric>(1.5)));
+    world.add(make_shared<sphere>(point3(-3,3.5,-1.5),1,make_shared<metal>(color(0.8,0.8,0.8),1)));
 
     // add light 
     for (int i = 0; i < mesh.objects.size(); ++i){
@@ -184,10 +191,8 @@ int main( int argc, char **argv ) {
                 auto u = (i + random_double()) / (image_width-1);
                 auto v = (j + random_double()) / (image_height-1);
                 ray r = cam.get_ray(u, v);
-                // pixel_color = indirect_ray_color(r, background, world, max_depth, s, samples_per_pixel);
-                // pixel_color = direct_ray_color(r, background, world, light, max_depth, s, samples_per_pixel);
-                pixel_color = (indirect_ray_color(r, background, world, max_depth, s, samples_per_pixel) 
-                            + direct_ray_color(r, background, world, light, max_depth, s, samples_per_pixel))/2;
+                pixel_color = (indirect_ray_color(r, background, world, max_depth, s, samples_per_pixel)*0.5
+                            + direct_ray_color(r, background, world, light, max_depth, s, samples_per_pixel)*0.5);
                 pixel_list[offset(i,j,image_height,image_width)] += pixel_color;
 
                 if(PREVIEW){

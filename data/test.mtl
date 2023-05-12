@@ -1,5 +1,5 @@
-# Blender MTL File: 'scene.blend'
-# Material Count: 7
+# Blender MTL File: 'scene.blend1'
+# Material Count: 6
 
 newmtl None
 Ns 500.000001
@@ -32,16 +32,6 @@ d 1.000000
 illum 2
 
 newmtl light
-Ns 225.000000
-Ka 1.000000 1.000000 1.000000
-Kd 0.800000 0.800000 0.800000
-Ks 0.500000 0.500000 0.500000
-Ke 0.661863 0.661863 0.661863
-Ni 1.450000
-d 1.000000
-illum 2
-
-newmtl light.001
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
