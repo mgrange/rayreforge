@@ -316,9 +316,24 @@ void open_cornell(hittable_list & mesh, camera & cam, double aspect_ratio)
     point3 lookat(0,1,0);
     vec3 vup(0,1,0);
     auto dist_to_focus = (lookfrom-lookat).length();
-    auto aperture = 2.0;
+    auto aperture = 0.01;
 
     cam = camera(lookfrom, lookat, vup, 45, aspect_ratio, aperture, dist_to_focus);
+}
+
+void open_cornell_empty(hittable_list & mesh, camera & cam, double aspect_ratio)
+{
+     // World
+    color background(0,0,0);
+    mesh = read_obj("../data/CornellBox-Empty-RG.obj");
+
+    point3 lookfrom(0,1,3.5);
+    point3 lookat(0,1,0);
+    vec3 vup(0,1,0);
+    auto dist_to_focus = (lookfrom-lookat).length();
+    auto aperture = 0.01;
+
+    cam = camera(lookfrom, lookat, vup, 40, aspect_ratio, aperture, dist_to_focus);
 }
 
 void open_sponza(hittable_list & world, camera & cam, double aspect_ratio)

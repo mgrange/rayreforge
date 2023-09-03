@@ -48,13 +48,14 @@ color indirect_ray_color(ray& r, color& background, hittable& world, int depth, 
     if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
         return emitted;
 
-    vec3 b1, b2;
-    branchlessONB(scattered.dir, b1, b2);
-    vec3 w = l2w(fibo(sample, all_samples), scattered.dir, b1, b2);
+    // vec3 b1, b2;
+    // branchlessONB(scattered.dir, b1, b2);
+    // vec3 w = l2w(fibo(sample, all_samples), scattered.dir, b1, b2);
 
-    ray fiboray(scattered.orig, w);
+    // ray fiboray(scattered.orig, w);
 
-    return emitted + attenuation * ray_color(fiboray, background, world, depth-1);
+    return emitted + attenuation * ray_color(scattered, background, world, depth-1);
+    // return emitted + attenuation * ray_color(fiboray, background, world, depth-1);
 }
 
 color direct_ray_color(ray& r, color& background, hittable& world, std::vector<shared_ptr <hittable> >& light, int depth, const int & sample, const int & all_samples) {
@@ -92,7 +93,6 @@ color direct_ray_color(ray& r, color& background, hittable& world, std::vector<s
         else
             return indirect_ray_color(r, background, world, depth, sample, all_samples);
     }
-
     return background;
 }
 
@@ -119,7 +119,7 @@ int main( int argc, char **argv ) {
 
     std::cerr << "attention y et z inversé par rapport à blender" << std::endl;
     // Image
-    double aspect_ratio = 16.0 / 9.0;
+    double aspect_ratio = 4.0 / 3.0;
     int image_width = 800;
     int image_height = static_cast<int>(image_width / aspect_ratio);
     int samples_per_pixel = 1000;
@@ -132,8 +132,9 @@ int main( int argc, char **argv ) {
     std::vector<shared_ptr <hittable> > light;
     camera cam;
 
-    open_test(mesh, cam, aspect_ratio);
+    // open_test(mesh, cam, aspect_ratio);
     // open_cornell(mesh, cam, aspect_ratio);
+    open_cornell_empty(mesh, cam, aspect_ratio);
     // open_sportCar(mesh, cam, aspect_ratio);
     // open_sponza(mesh, cam, aspect_ratio);
     // open_spaceship(mesh, cam, aspect_ratio);
@@ -141,11 +142,19 @@ int main( int argc, char **argv ) {
     // final_scene(mesh, cam, image_width, aspect_ratio);
 
     // create BVH
-    world.add(make_shared<bvh_node>(mesh, 0, 1));
+    // world.add(make_shared<bvh_node>(mesh, 0, 1));
+    world = mesh;
     std::cerr << std::endl;
 
-    world.add(make_shared<sphere>(point3(0,3.5,0),1,make_shared<dielectric>(1.5)));
-    world.add(make_shared<sphere>(point3(-3,3.5,-1.5),1,make_shared<metal>(color(0.8,0.8,0.8),1)));
+    // world.add(make_shared<sphere>(point3(0,3.5,0),1,make_shared<dielectric>(1.5)));
+    // world.add(make_shared<sphere>(point3(-3,3.5,-1.5),1,make_shared<metal>(color(0.8,0.8,0.8),1)));
+    
+    auto matmetal = make_shared<metal>(color(0.8,0.6,0.2),0.1);
+    auto dielec = make_shared<dielectric>(1.5);
+    auto emat = make_shared<lambertian>(make_shared<image_texture>("../data/earthmap.jpg"));
+    world.add(make_shared<sphere>(point3(0.5,0.5,-0.1),0.4,matmetal));
+    world.add(make_shared<sphere>(point3(-0.5,0.5,-0.2),0.4,dielec));
+    world.add(make_shared<sphere>(point3(-0.5,0.5,-0.2),0.3,emat));
 
     // add light 
     for (int i = 0; i < mesh.objects.size(); ++i){
@@ -191,8 +200,8 @@ int main( int argc, char **argv ) {
                 auto u = (i + random_double()) / (image_width-1);
                 auto v = (j + random_double()) / (image_height-1);
                 ray r = cam.get_ray(u, v);
-                pixel_color = (indirect_ray_color(r, background, world, max_depth, s, samples_per_pixel)*0.5
-                            + direct_ray_color(r, background, world, light, max_depth, s, samples_per_pixel)*0.5);
+                pixel_color = (indirect_ray_color(r, background, world, max_depth, s, samples_per_pixel)*1
+                            /*+ direct_ray_color(r, background, world, light, max_depth, s, samples_per_pixel)*0.5*/);
                 pixel_list[offset(i,j,image_height,image_width)] += pixel_color;
 
                 if(PREVIEW){

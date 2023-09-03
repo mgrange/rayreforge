@@ -59,7 +59,7 @@ class metal : public material {
         }
 
         virtual bool isMatMaterial() const override{
-            return fuzz == 0;
+            return false;
         }
 
     public:
